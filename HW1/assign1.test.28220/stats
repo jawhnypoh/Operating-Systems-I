@@ -1,0 +1,169 @@
+#!/bin/bash
+# Johnny Po
+# Assignment 1: stats
+
+# Variables for temporary filenames
+tmpStdinFile=$(mktemp)
+tmpFile=$(mktemp)
+
+# General Variables
+average=0
+median=0
+
+# To easily manipulate file
+inputFile=${args[1]}
+
+# Error messages
+inputError() {
+	echo "Incorrect number of arguments, or wrong arguments. "
+	echo "Usage: stats { -r | -c } [filename]"
+	echo " "
+	exit 1
+}
+
+readError() {
+	echo "ERROR: Cannot read file. "
+	exit 1
+}
+
+
+# Cleaning up
+cleanUp() {
+	rm -f tmpFile$$
+	rm -f tmpStdinFile$$
+}
+
+
+# Trap command to catch signals
+trap "cleanUp; echo -e '\nSignal detected; exiting...'; exit 1" INT HUP TERM
+
+##############################
+# Start of program
+###############################
+# Check number of command line arguments
+if [[ "$#" -lt 1 || "$#" -gt 2 ]]
+then
+   inputError
+fi
+
+
+# Check if first argument is either -r or -c
+if ! [[ $1 == -c* ]] && ! [[ $1 == -r* ]]
+then
+   inputError
+fi
+
+# Check if file is readable
+if test -r $inputFile
+then 
+   echo "File is readable. Continuing... "
+else
+   readError
+fi
+
+# Read each line and append into tmpStdinFile
+while read line
+do
+   echo "$line" >> $tmpStdinFile
+done < "${2:-/dev/stdin}"
+
+# Put the read data into inputFile
+inputFile=$tmpStdinFile
+
+
+# If user chooses "-r", calculate for rows
+if [[ $1 == -r* ]]
+then
+   # Just to make sure variables are set to 0
+   rowCount=0
+   rowColumn=0
+   rowTotal=0
+
+   echo "Average Median "
+
+   while read line
+   do
+      # Count number of characters in each row
+      rowCount=($(echo $line | wc -w))
+
+      # Moves each character in the row to its own line for easier counting
+      rowColumn=$(echo $line | tr "\t" "\n")
+
+      # Count the sum of all the elements in row
+      rowTotal=0
+      for i in $rowColumn
+      do
+	 rowTotal=$(expr $i + $rowTotal)
+      done
+
+      # Calculate the Average for row
+      average=$(expr $(expr $rowTotal + $(expr $rowCount / 2)) / $rowCount)
+
+      # Calculate the Median for row using Piping
+      median=$(echo "$line" | tr '\t' '\n' | sort -n | tr '\n' '\t' | cut -f $(expr $(expr $rowCount / 2) + 1))
+
+
+      # Push average and median into tmpFile
+      echo -e " $average	$median " >> $tmpFile
+
+   done < $inputFile
+
+   while read line
+   do
+      echo "$line"
+   done < $tmpFile
+   
+
+# If user chooses "-c", calculate for columns
+elif [[ $1 == -c* ]]
+then
+   # Just to make sure variables are set to 0
+   numColumns=0
+   columnTotal=0
+   columnSize=0
+
+   echo "Average Median "
+
+   # Calculate the number of elements in each column
+   columnSize=$(cut -c 1 $inputFile | wc -w)
+
+   # Calculate the number of columns
+   line=$(head -n 1 $inputFile)
+   for i in $line
+   do
+      numColumns=$(expr $numColumns + 1)
+   done
+
+   for i in $(seq 1 $numColumns) 
+   do
+     # Reset columnTotal each iteration
+     columnTotal=0
+     
+     # Separate each column and put into own for calcuating 
+     ownColumn=$(cut -f $i $inputFile | tr "\t" "\n")
+
+     # Add all elements in each column to columnTotal
+     for j in $ownColumn
+     do
+	columnTotal=$(expr $j + $columnTotal)
+     done
+
+     # Calculate the Average
+     average=$(expr $(expr $columnTotal + $(expr $columnSize / 2)) / $columnSize)
+
+     # Calculate the Median for columns using Piping
+     median=$(echo "$ownColumn" | tr '\t' '\n' | sort -n | tr '\n' '\t' | cut -f $(expr $(expr $columnSize / 2) + 1))
+
+     # Push average and median into tmpFile
+     echo -e " $average	$median " >> $tmpFile
+     
+   done	< $inputFile
+
+  while read line
+  do
+     echo "$line"
+  done < $tmpFile
+fi   
+
+# Call the function to clean everything up
+cleanUp

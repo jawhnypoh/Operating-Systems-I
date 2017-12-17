@@ -1,0 +1,301 @@
+#!/bin/bash
+#
+# Program 1
+#
+# To create a test run of your program put this file and your stats
+# program, which must be named "stats", together in a directory.  Then run
+# this command, which will take perhaps 15 seconds:
+#
+# % p1gradingscript > p1results
+#
+# Your whole program must be contained in the single file named "stats".
+#
+
+LS=/bin/ls
+RM=rm
+PS=/bin/ps
+TESTDIR=assign1.test.$$
+STATS=./stats
+
+if test -d $TESTDIR
+	then
+		echo Please rename or remove $TESTDIR
+		exit 1
+fi
+
+mkdir $TESTDIR 2>&1
+cp stats $TESTDIR 2>&1
+
+cd $TESTDIR 2>&1
+chmod +x stats 2>&1
+
+echo ------------------------------------------------------------------------------------------------------
+echo Creating file1 file2 file3 file4 file5
+echo
+cat > file1 <<EOF
+93	93	93	93	93	93	93	93	100
+73	84	95	83	72	86	80	97	100
+85	0	82	75	88	79	80	81	100
+85	0	87	73	88	79	80	71	100
+80	81	83	63	100	85	63	68	100
+53	57	61	53	70	61	73	50	100
+55	54	41	63	63	45	33	41	100
+53	55	43	44	63	75	35	21	100
+100	100	100	100	100	100	100	100	100
+EOF
+cat > file2 <<EOF
+97	95	93	91
+86	80	97	99
+61	73	50	100
+95	94	93	92
+EOF
+cat > file3 <<EOF
+17
+EOF
+cat > file4 <<EOF
+EOF
+i=0
+while [ $i -lt 50000 ]
+do
+	echo "$i	`expr $i \* 2`"
+	i=`expr $i + 100`
+done > file5
+echo
+$LS -l 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 1 Statistics by Rows: 1 point per correct number: 18
+echo
+$STATS -rows file1 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo Check for Temporary Files: 5 points if no temp files
+echo
+$LS 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 1 Statistics by Cols: 1 point per correct number: 18
+echo
+$STATS -cols file1 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo Check for Temporary Files: 5 points if no temp files
+echo
+$LS 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 2 Statistics by Rows: 1 point per correct number: 8
+echo
+$STATS -rows file2 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 2 Statistics by Cols: 1 point per correct number: 8
+echo
+$STATS -cols file2 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 3 Statistics by Rows: 1 point per correct number: 2
+echo
+$STATS -rows file3 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 3 Statistics by Cols: 1 point per correct number: 2
+echo
+$STATS -cols file3 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 4 Statistics by Rows: lose 3 points if result contains any numbers\; nothing or error text are OK
+echo
+$STATS -rows file4 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 4 Statistics by Cols: lose 3 points if result contains any numbers\; nothing or error text are OK
+echo
+$STATS -cols file4 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File 5 Statistics by Cols: 1 point per number: 4
+echo
+$STATS -cols file5 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo Check for Temporary Files: 5 points if no temp files
+echo
+$LS 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo Good Syntax
+echo
+echo Standard Input on Rows: 2 points for exit value 0, 1 point for having no error text
+$STATS -rows < file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Standard Input on Cols: 2 points for exit value 0, 1 point for having no error text
+$STATS -cols < file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Option -cols: 2 points for exit value 0, 1 point for having no error text
+$STATS -cols file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Option -rrrrrr: 2 points for exit value 0, 1 point for having no error text
+$STATS -rrrrrr file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Option -cccccc: 3 points for exit value 0
+$STATS -cccccc file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Option -r: 3 points for exit value 0
+$STATS -r file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo Bad Syntax
+echo
+echo Too Few Arguments: 2 point for usage text, 2 points for exit value 1
+$STATS 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Too Many Arguments: 2 point for usage text, 2 points for exit value 1
+$STATS -r file1 file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Wrong Format: 4 point for usage text, 2 points for exit value 1
+$STATS file1 file2 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo Bad Option: 2 point for usage text, 2 points for exit value 1
+$STATS -x file1 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo File Not Readable: 2 points for error msg, 2 points for program halting
+echo
+chmod 000 file3 2>&1
+echo
+$STATS -r file3 2> err.out
+echo Exit Value: $?
+echo Error Message:
+cat err.out
+echo
+$RM -f err.out 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo Check for Temporary Files: 5 points for no temp files
+echo
+$LS 2>&1
+echo
+echo
+
+echo ------------------------------------------------------------------------------------------------------
+echo Simultaneous Runs
+echo
+$STATS -rows < file1 > simrun1.out 2>&1 &
+PID1=$!
+$STATS -rows < file1 > simrun2.out 2>&1 &
+PID2=$!
+$STATS -rows < file1 > simrun3.out 2>&1 &
+PID3=$!
+sleep 2
+echo
+echo Before Finishing
+$LS 2>&1
+echo
+while ($PS | egrep "^ *($PID1)|($PID2)|($PID3)" > /dev/null) 
+do
+	echo waiting...
+	sleep 5
+done
+echo
+echo Run 1 Output: 5 points for succesful run 1
+cat simrun1.out 2>&1
+echo
+echo Run 2 Output: 5 points for succesful run 2
+cat simrun2.out 2>&1
+echo
+echo Run 3 Output: 5 points for succesful run 3
+cat simrun3.out 2>&1
+echo
+$RM -f simrun[123].out 2>&1
+echo
+echo After Finishing: 5 points if no temp file
+$LS 2>&1
+echo
+echo
+echo Trap Signals Test - ignore any messages about a process not being able to be killed
+echo
+$STATS -rows < file5 > /dev/null &
+PID=$!
+sleep 1
+echo
+echo Before Kill
+$LS 2>&1
+echo
+$PS
+echo
+kill $PID
+sleep 5
+echo
+echo After Kill: 8 points if no temp files
+$LS 2>&1
+echo
+$PS
+echo
+echo
+
+
+cd ..
+$RM -rf $TESTDIR 2>&1

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Compiler for Program 4
+
+# For keygen
+gcc -g -o keygen keygen.c
+
+# For otp_enc
+gcc -g -o otp_enc otp_enc.c
+
+# For otp_enc_d
+gcc -g -o otp_enc_d otp_enc_d.c
+
+# For otp dec_c
+gcc -g -o otp_dec otp_dec.c
+
+# For otp_dec_d
+gcc -g -o otp_dec_d otp_dec_d.c
+
